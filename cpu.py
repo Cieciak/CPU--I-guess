@@ -20,7 +20,7 @@ class CPU:
         self.ir = memory.read(self.dr)
         self.dr += 1
 
-    def execute(self, memory: RAM):
+    def execute(self, memory: RAM, disk: Disk):
         opcode = self.ir // 16
         args = self.ir % 16
 
@@ -53,23 +53,28 @@ class CPU:
         elif opcode == 6:
             self.ax -= r.read(args)
 
-        # 
+        # Read disk
+        elif opcode == 7:
+            for inx, byte in enumerate(disk.read(args)):
+                r.write(8 + inx, byte)
+            
 
         # Halt
         elif opcode == 15:
             print('CPU Halted!')
             quit()
 
+d = Disk()
+d.set_up(0, 8)
 
 test = CPU()
 os.system('cls')
 
 r = RAM(16)
 r.write(15, 15 * 16)
-
 r.write(14, 1)
-r.write(0, 3*16 + 14)
-r.write(2, 5*16)
+
+r.write(2, 7*16 + 1)
 
 
 os.system('cls')
@@ -79,4 +84,4 @@ while True:
     test.get_instruction(r)
     print(test)
     print(r)
-    test.execute(r)
+    test.execute(r, d)

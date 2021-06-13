@@ -3,7 +3,11 @@ from ram import *
 
 class Disk:
 
-    def __init__(self, disk_number: int, sectors: int):
+    def set_up(self, disk_number: int, sectors: int):
+        self.name = f'disk{disk_number}'
+        self.sectors = sectors     
+
+    def init(self, disk_number: int, sectors: int):
         self.name = f'disk{disk_number}'
         self.sectors = sectors
         try:
