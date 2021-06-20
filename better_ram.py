@@ -4,7 +4,13 @@ class RAM:
         self.content = [0] * size
 
     def __repr__(self):
-        return f'{self.content}'
+        out = ''
+        for index, val in enumerate(self.content):
+            if index % 8 == 0:
+                out += '\n'
+            out += str(hex(val))[2:] if len(str(hex(val))[2:]) == 2 else '0' + str(hex(val))[2:]
+            out += ' '
+        return out
 
     def _read(self, address: int, length: int):
         out = 0

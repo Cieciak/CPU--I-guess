@@ -1,78 +1,152 @@
 from better_ram import RAM
+import os
 
+## AX  - 0
+## BX  - 1
+## CX  - 2
+## DX  - 3
+## IR  - 4
+## DR  - 5
+## FL  - 6
+## LR  - 7
+## R9  - 8
+## R10 - 9
+## R11 -10
+## R12 -11
+## R13 -12
+## R14 -13
+## R15 -14
+## OV  -15
 
 class CPU:
 
     def __init__(self):
-        self.ax = 0
-        self.bx = 0
-        self.dx = 0
-        self.cx = 0
 
-        self.lr = 0
-        
-        self.ir = 0
-        self.dr = 0
-
-    def __repr__(self) -> str:
-        out =  f'AX: {self.ax}\n'
-        out += f'BX: {self.bx}\n'
-        out += f'CX: {self.cx}\n'
-        out += f'DX: {self.dx}\n'
-        out += f'IR: {self.ir}\n'
-        out += f'DR: {self.dr}'
-
+        self.reg = [0] * 15
+        self.stack = []
+    
+    def __repr__(self):
+        out = ''
+        for i in self.reg:
+            out += str(i) + '\n'
+        out += f'{self.stack}'
         return out
 
-    def get_instruction(self, ram: RAM):
-        self.ir = ram.read_quad_word(self.dr)
-        self.dr += 8
+    def _get_instruction(self, ram: RAM):
+        self.reg[4] = ram.read_quad_word(self.reg[5])
+        self.reg[5] += 8
 
-    def execute(self, ram: RAM):
-        opcode = self.ir // (2**32)
-        args = self.ir % (2**32)
+    def _execute(self, ram: RAM):
+        A_reg = self.reg[4] % 2**35 // 2**32
+        B_reg = self.reg[4] % 2**39 // 2**36
+        opcode = self.reg[4] // (2**40)
+        args = self.reg[4] % (2**32)
 
-        if opcode == 0:
-            pass
-        elif opcode == 1:
-            self.ax = ram.read_quad_word(args)
-        elif opcode == 2:
-            self.bx = ram.read_quad_word(args)
-        elif opcode == 3:
-            self.cx = ram.read_quad_word(args)
-        elif opcode == 4:
-            self.dx = ram.read_quad_word(args)
-        elif opcode == 5:
-            self.ax = self.ax - self.bx
-        elif opcode == 6:
-            self.ax += self.bx
-        elif opcode == 7:
-            self.dr = args
-        elif opcode == 15:
-            print('CPU Halted!')
+        if opcode == (2**24) - 1:
+            print('CPU halted!')
             quit()
 
+        # Read from RAM
+        elif opcode == 0b1:
+            self.reg[A_reg] = ram.read_quad_word(args)
+        # Write to RAM
+        elif opcode == 0b10:
+            ram.write_quad_word(args, self.reg[A_reg]) 
+        # Add
+        elif opcode == 0b11:
+            self.reg[A_reg] += self.reg[B_reg]
+        # Sub
+        elif opcode == 0b100:
+            self.reg[A_reg] -= self.reg[B_reg]
+        # Mul
+        elif opcode == 0b101:
+            self.reg[A_reg] *= self.reg[B_reg]
+        # Div
+        elif opcode == 0b110:
+            self.reg[A_reg] = self.reg[A_reg] // self.reg[B_reg]
+            self.reg[A_reg + 1] = self.reg[A_reg] % self.reg[B_reg]
+        # Jump
+        elif opcode == 0b111:
+            self.reg[5] = args - 8
+        # Test
+        elif opcode == 0b1000:
+            if self.reg[A_reg] == 0:
+                self.reg[6] = 1 << 64        
+        # Compare
+        elif opcode == 0b1001:
+            self.reg[6] = 0
+            if self.reg[A_reg] == 0:
+                self.reg[6] += 1 << 64
+            if self.reg[A_reg] < self.reg[B_reg]:
+                self.reg[6] += 1 << 63
+            if self.reg[A_reg] == self.reg[B_reg]:
+                self.reg[6] += 1 << 62
+            if self.reg[A_reg] > self.reg[B_reg]:
+                self.reg[6] += 1 << 61
+        # Jump if zero
+        elif opcode == 0b1010:
+            if (self.reg[6] >> 64) % 2:
+                self.reg[5] = args - 8
+        # Jump if smaller
+        elif opcode == 0b1011:
+            if (self.reg[6] >> 63) % 2:
+                self.reg[5] = args - 8
+        # Jump if equal
+        elif opcode == 0b1100:
+            if (self.reg[6] >> 62) % 2:
+                self.reg[5] = args - 8
+        # Jump if greater
+        elif opcode == 0b1101:
+            if (self.reg[6] >> 61) % 2:
+                self.reg[5] = args - 8
+        # NOT
+        elif opcode == 0b1110:
+            self.reg[A_reg] = ~self.reg[A_reg]
+        elif opcode == 0b1111:
+            self.reg[A_reg] = self.reg[A_reg] & self.reg[B_reg]
+        elif opcode == 0b10000:
+            self.reg[A_reg] = self.reg[A_reg] | self.reg[B_reg]
+        elif opcode == 0b10001:
+            self.reg[A_reg] = ~(self.reg[A_reg] & self.reg[B_reg])
+        elif opcode == 0b10010:
+            self.reg[A_reg] = ~(self.reg[A_reg] | self.reg[B_reg])
+        elif opcode == 0b10011:
+            self.reg[A_reg] = self.reg[A_reg] ^ self.reg[B_reg]
+        elif opcode == 0b10100:
+            self.reg[A_reg] = ~(self.reg[A_reg] ^ self.reg[B_reg])
 
-proc = CPU()
-ram = RAM(1024)
+        elif opcode == 0b10101:
+            self.stack.append(self.reg[A_reg])
 
-# Halt 
-ram.write_quad_word(1016, 15 << 32)
+        elif opcode == 0b10110:
+            self.reg[A_reg] = self.stack.pop(-1)
+        
+        elif opcode == 0b10111:
+            self.stack = []
+
+        elif opcode == 0b11000:
+            self.reg[A_reg] = len(self.stack)
+ram = RAM(128)
+
+# Halt
+ram.write_quad_word(120, ((2**24)-1) << 40)
+
+# Code
+ram.write_quad_word(0,  (0b00001_0000_0000 << 32) + 56)
+ram.write_quad_word(8,  (0b00001_0000_0001 << 32) + 48)
+ram.write_quad_word(16, (0b10101_0000_0000 << 32))
+ram.write_quad_word(24, (0b10110_0000_0010 << 32))
 
 # Vars
-ram.write_quad_word(1008, 0)
-ram.write_quad_word(1000, 1)
+ram.write_quad_word(56, 3)
+ram.write_quad_word(48, 2)
 
-# Program starts here
-ram.write_quad_word(8, (1 << 32) + 1008)
-ram.write_quad_word(16, (2 << 32) + 1000)
-ram.write_quad_word(24, (6 << 32))
-ram.write_quad_word(32, (7 << 32) + 24)
+cpu = CPU()
 
 while True:
     input()
-    proc.get_instruction(ram)
-    proc.execute(ram)
+    os.system('cls')
+    cpu._get_instruction(ram)
     print(ram)
-    print(proc)
-    
+    print(cpu)
+    cpu._execute(ram)
