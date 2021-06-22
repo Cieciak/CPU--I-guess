@@ -126,19 +126,30 @@ class CPU:
 
         elif opcode == 0b11000:
             self.reg[A_reg] = len(self.stack)
+
+        elif opcode == 0b11001:
+            self.reg[A_reg] = ram.read_byte(args)
+        
+        elif opcode == 0b11010:
+            self.reg[A_reg] = ram.read_word(args)
+        
+        elif opcode == 0b11011:
+            self.reg[A_reg] = ram.read_double_word(args)
+        elif opcode == 0b11100:
+            ram.write_byte(args, self.reg[A_reg] % 256)
+        elif opcode == 0b11101:
+            ram.write_word(args, self.reg[A_reg] % (256 * 256))
+        elif opcode == 0b11110:
+            ram.write_double_word(args, self.reg[A_reg] % (256 * 256 * 256 * 256))
 ram = RAM(128)
 
 # Halt
 ram.write_quad_word(120, ((2**24)-1) << 40)
 
 # Code
-ram.write_quad_word(0,  (0b00001_0000_0000 << 32) + 56)
-ram.write_quad_word(8,  (0b00001_0000_0001 << 32) + 48)
-ram.write_quad_word(16, (0b10101_0000_0000 << 32))
-ram.write_quad_word(24, (0b10110_0000_0010 << 32))
-
+ram.write_quad_word(0, (0b11001_0000_0000 << 32) + 56)
 # Vars
-ram.write_quad_word(56, 3)
+ram.write_byte(56, 3)
 ram.write_quad_word(48, 2)
 
 cpu = CPU()

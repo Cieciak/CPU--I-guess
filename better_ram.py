@@ -47,3 +47,11 @@ class RAM:
 
     def write_quad_word(self, address: int, value: int):
         self._write(address, 8, value)
+
+if __name__ == "__main__":
+    ram = RAM(64)
+
+    ram.write_byte(4, 1)
+    print(ram)
+    a = ram.read_byte(4)
+    print(a)
