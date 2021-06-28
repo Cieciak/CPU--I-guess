@@ -1,0 +1,8 @@
+mov
+push
+pop
+hlt
+db
+dw
+dd
+dq

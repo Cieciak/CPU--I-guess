@@ -102,16 +102,22 @@ class CPU:
         # NOT
         elif opcode == 0b1110:
             self.reg[A_reg] = ~self.reg[A_reg]
+
         elif opcode == 0b1111:
             self.reg[A_reg] = self.reg[A_reg] & self.reg[B_reg]
+            
         elif opcode == 0b10000:
             self.reg[A_reg] = self.reg[A_reg] | self.reg[B_reg]
+
         elif opcode == 0b10001:
             self.reg[A_reg] = ~(self.reg[A_reg] & self.reg[B_reg])
+
         elif opcode == 0b10010:
             self.reg[A_reg] = ~(self.reg[A_reg] | self.reg[B_reg])
+
         elif opcode == 0b10011:
             self.reg[A_reg] = self.reg[A_reg] ^ self.reg[B_reg]
+
         elif opcode == 0b10100:
             self.reg[A_reg] = ~(self.reg[A_reg] ^ self.reg[B_reg])
 
@@ -135,22 +141,84 @@ class CPU:
         
         elif opcode == 0b11011:
             self.reg[A_reg] = ram.read_double_word(args)
+
         elif opcode == 0b11100:
             ram.write_byte(args, self.reg[A_reg] % 256)
+
         elif opcode == 0b11101:
             ram.write_word(args, self.reg[A_reg] % (256 * 256))
+
         elif opcode == 0b11110:
             ram.write_double_word(args, self.reg[A_reg] % (256 * 256 * 256 * 256))
+
+        elif opcode == 0b11111:
+            self.reg[B_reg] = self.reg[A_reg]
+        
+        # Interrupt
+        elif opcode == 0b100000:
+            pass
+
+        elif opcode == 0b100001:
+            self.reg[A_reg] = args
+
+        elif opcode == 0b100011:
+            self.reg[A_reg] += args
+
+        elif opcode == 0b100100:
+            self.reg[A_reg] += args
+
+        elif opcode == 0b100101:
+            self.reg[A_reg] *= args
+
+        elif opcode == 0b100110:
+            self.reg[A_reg] = self.reg[A_reg] // args
+            self.reg[A_reg + 1] = self.reg[A_reg] % args
+
+        elif opcode == 0b100111:
+
+            self.reg[6] = 0
+            if self.reg[A_reg] == 0:
+                self.reg[6] += 1 << 64
+            if self.reg[A_reg] < args:
+                self.reg[6] += 1 << 63
+            if self.reg[A_reg] == args:
+                self.reg[6] += 1 << 62
+            if self.reg[A_reg] > args:
+                self.reg[6] += 1 << 61
+            
+        elif opcode == 0b101111:
+            self.reg[A_reg] = self.reg[A_reg] & args
+
+        elif opcode == 0b110000:
+            self.reg[A_reg] = self.reg[A_reg] | args
+
+        elif opcode == 0b110001:
+            self.reg[A_reg] = ~(self.reg[A_reg] & args)
+
+        elif opcode == 0b110010:
+            self.reg[A_reg] = ~(self.reg[A_reg] | args)
+
+        elif opcode == 0b110011:
+            self.reg[A_reg] = self.reg[A_reg] ^ args
+
+        elif opcode == 0b110100:
+            self.reg[A_reg] = ~(self.reg[A_reg] ^ args)
+
+        elif opcode == 0b111111:
+            self.reg[A_reg] = args
+
 ram = RAM(128)
+
+
+
+# Code
+
+ram._load(open('./Assembler/r.out'), 8)
+
+# Vars
 
 # Halt
 ram.write_quad_word(120, ((2**24)-1) << 40)
-
-# Code
-ram.write_quad_word(0, (0b11001_0000_0000 << 32) + 56)
-# Vars
-ram.write_byte(56, 3)
-ram.write_quad_word(48, 2)
 
 cpu = CPU()
 

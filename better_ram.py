@@ -1,3 +1,6 @@
+from typing import IO
+
+
 class RAM:
 
     def __init__(self, size: int):
@@ -23,6 +26,11 @@ class RAM:
             to_write = (data % 256)
             self.content[address + length - i - 1] = to_write
             data = data >> 8
+
+    def _load(self, file: IO, _type: int):
+        for index, value in enumerate(file.read().strip().split(' ')):
+            self._write(_type * index, _type, int(value))
+            
 
     def read_byte(self, address: int):
         return self._read(address, 1)
@@ -51,7 +59,5 @@ class RAM:
 if __name__ == "__main__":
     ram = RAM(64)
 
-    ram.write_byte(4, 1)
+    ram._load(open('r.out'), 8)
     print(ram)
-    a = ram.read_byte(4)
-    print(a)
