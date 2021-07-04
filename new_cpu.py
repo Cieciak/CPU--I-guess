@@ -165,7 +165,7 @@ class CPU:
             self.reg[A_reg] += args
 
         elif opcode == 0b100100:
-            self.reg[A_reg] += args
+            self.reg[A_reg] -= args
 
         elif opcode == 0b100101:
             self.reg[A_reg] *= args
@@ -207,7 +207,7 @@ class CPU:
         elif opcode == 0b111111:
             self.reg[A_reg] = args
 
-ram = RAM(128)
+ram = RAM(1024)
 
 
 
@@ -218,7 +218,7 @@ ram._load(open('./Assembler/r.out'), 8)
 # Vars
 
 # Halt
-ram.write_quad_word(120, ((2**24)-1) << 40)
+ram.write_quad_word(1016, ((2**24)-1) << 40)
 
 cpu = CPU()
 

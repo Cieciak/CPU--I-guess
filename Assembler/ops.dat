@@ -6,3 +6,8 @@ db
 dw
 dd
 dq
+add
+sub
+mul
+div
+jmp

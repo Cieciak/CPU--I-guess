@@ -1,4 +1,11 @@
-dq test, 545
+db test
+dw drugi_test
 
-mov rax, [5]
-mov test, rax
+j:
+mov rax, 5
+mov rbx, 3432
+d:
+mov rcx, [24]
+a:
+
+jmp j

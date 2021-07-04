@@ -64,8 +64,14 @@ class Arg:
             self.value = cpu_regs[value]
 
         elif value[0] == '[' and value[-1] == ']':
-            self.value = int(value[1:-1])
-            self.type = 'address'
+            try:
+                self.value = int(value[1:-1])
+                self.type = 'address'
+                self.numeric = True
+            except:
+                self.value = value[1:-1]
+                self.type = 'address'
+                self.numeric = False
 
         else:
             self.type = 'name'
@@ -84,7 +90,7 @@ class Line:
             self.type = 'empty_line'
             self.opcode = Opcode('')
             self.args = None
-            self.name = None
+            self.name = ''
 
         # Figure out if it is a label or instruction 
         elif line.startswith(opcodes):
@@ -95,7 +101,7 @@ class Line:
             if args:
                 self.args = [Arg(i.strip()) for i in args[0].split(',')]
             self.opcode = Opcode(opcode)
-            self.name = None
+            self.name = ''
 
         elif line.endswith(':'):
             self.type = 'label'
@@ -150,8 +156,53 @@ for line in lines:
             out[u] = i
 
         if line.args[0].type == 'reg' and line.args[1].type == 'address':
-            i = create_instruction(0b10, 0, line.args[0].value, line.args[1].value)
+            if line.args[1].numeric:
+                i = create_instruction(0b10, 0, line.args[0].value, line.args[1].value)
             out[u] = i
+
+        if line.args[0].type == 'address' and line.args[1].type == 'reg':
+            i = create_instruction(0b10, 0, line.args[1].value, line.args[0].value)
+            out[u] = i
+
+    if line.opcode.name == 'add':
+        if line.args[0].type == 'reg' and line.args[1].type == 'reg':
+            i = create_instruction(0b11, line.args[1].value, line.args[0].value, 0)
+            out[u] = i
+
+        if line.args[0].type == 'reg' and line.args[1].type == 'number':
+            i = create_instruction(0b100011, 0, line.args[0].value, line.args[1].value)
+            out[u] = i
+
+    if line.opcode.name == 'sub':
+        if line.args[0].type == 'reg' and line.args[1].type == 'reg':
+            i = create_instruction(0b100, line.args[1].value, line.args[0].value, 0)
+            out[u] = i
+
+        if line.args[0].type == 'reg' and line.args[1].type == 'number':
+            i = create_instruction(0b100100, 0, line.args[0].value, line.args[1].value)
+            out[u] = i
+
+    if line.opcode.name == 'mul':
+        if line.args[0].type == 'reg' and line.args[1].type == 'reg':
+            i = create_instruction(0b101, line.args[1].value, line.args[0].value, 0)
+            out[u] = i
+
+        if line.args[0].type == 'reg' and line.args[1].type == 'number':
+            i = create_instruction(0b100101, 0, line.args[0].value, line.args[1].value)
+            out[u] = i
+
+    if line.opcode.name == 'div':
+        if line.args[0].type == 'reg' and line.args[1].type == 'reg':
+            i = create_instruction(0b110, line.args[1].value, line.args[0].value, 0)
+            out[u] = i
+
+        if line.args[0].type == 'reg' and line.args[1].type == 'number':
+            i = create_instruction(0b100110, 0, line.args[0].value, line.args[1].value)
+            out[u] = i
+
+    if line.opcode.name == 'jmp':
+        i = create_instruction(0b111, 0, 0, labels[line.args[0].value])
+        out[u] = i
 
     u += 1
     
