@@ -63,8 +63,9 @@ class CPU:
             self.reg[A_reg] *= self.reg[B_reg]
         # Div
         elif opcode == 0b110:
-            self.reg[A_reg] = self.reg[A_reg] // self.reg[B_reg]
-            self.reg[A_reg + 1] = self.reg[A_reg] % self.reg[B_reg]
+            a = self.reg[A_reg]
+            self.reg[A_reg] = a // self.reg[B_reg]
+            self.reg[A_reg + 1] = a % self.reg[B_reg]
         # Jump
         elif opcode == 0b111:
             self.reg[5] = args - 8

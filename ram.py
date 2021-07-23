@@ -1,5 +1,3 @@
-from typing import BinaryIO
-
 class RAM:
 
     def __init__(self, size: int):
@@ -17,4 +15,3 @@ class RAM:
 
     def write(self, address: int, value: int):
         self.content[address] = value % 256
-        

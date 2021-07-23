@@ -1,0 +1,15 @@
+mov
+ldf
+ldt
+add
+sub
+nor
+push
+pop
+jmp
+jz
+moi
+cmp
+jo
+hlt
+nop
