@@ -1,5 +1,8 @@
 from ram import RAM
 from basics import int8
+from gpu import GPU
+import time
+import os
 
 class CPU:
 
@@ -120,23 +123,36 @@ class CPU:
                 pass
 
 ram = RAM(2**10)
-ram.write(0, 0b10011001)
-ram.write(1, 0b01000000)
-ram.write(2, 0b01110000)
-ram.write(3, 0)
-ram.write(4, 1)
-
+ram.write(0, 0b1001_1011)
+ram.write(1, 0b0011_1000)
+ram.write(2, 0)
+ram.write(3, 100)
+ram.write(4, 0b0010_0000)
+ram.write(5, 0)
+ram.write(6, 3)
+ram.write(7, 0b0100_0000)
+ram.write(8, 0b0011_0000)
+ram.write(9, 0)
+ram.write(10, 3)
+ram.write(11, 0b0111_0000)
+ram.write(12, 0)
+ram.write(13, 1)
 
 cpu = CPU()
-i = 0
-while i < 100:
+gpu = GPU((100, 200))
+
+
+
+
+while True:
     cpu.fetch(ram)
     cpu.execute(ram)
-    print('AR: ',cpu.ar)
-    print('XR: ',cpu.xr)
-    print('IR: ',cpu.ir)
-    print('DR: ',cpu.dr)
-    print()
-    i += 1
-
-print(ram)
+    #print('AR: ',cpu.ar)
+    #print('XR: ',cpu.xr)
+    #print('IR: ',cpu.ir)
+    #print('DR: ',cpu.dr)
+    #print()
+    #print(ram.content[:200])
+    os.system('cls')
+    gpu.render_frame(ram)
+    time.sleep(0.2)
