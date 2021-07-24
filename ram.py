@@ -15,3 +15,7 @@ class RAM:
 
     def write(self, address: int, value: int):
         self.content[address] = value % 256
+
+    def load(self, data):
+        for index, i in enumerate(data):
+            self.write(index, i)

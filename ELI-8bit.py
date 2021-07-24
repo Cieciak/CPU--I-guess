@@ -63,53 +63,53 @@ class CPU:
             self.ar += self.xr
 
         # SUB
-        elif opcode == 0b0100:
+        elif opcode == 0b0101:
             self.ar += self.xr
 
         # NOR
-        elif opcode == 0b0100:
+        elif opcode == 0b0110:
             self.ar |= self.xr
 
         # PUSH
-        elif opcode == 0b0101:
+        elif opcode == 0b0111:
             if arg == 0b0000:
                 self.stack.append(self.ar)
             elif arg == 0b1000:
                 self.stack.append(self.xr)
 
         # POP
-        elif opcode == 0b0110:
+        elif opcode == 0b1000:
             if arg == 0b0000:
                 self.ar = self.stack.pop()
             elif arg == 0b1000:
                 self.xr = self.stack.pop()
 
         # JMP
-        elif opcode == 0b0111:
+        elif opcode == 0b1001:
             self.fetch(ram, 0)
             self.fetch(ram, 0)
             self.dr = self.address_stack
             self.address_stack = 0
 
         # JZ
-        elif opcode == 0b1000 and self.ar.zero:
+        elif opcode == 0b1010 and self.ar.zero:
             self.fetch(ram, 0)
             self.fetch(ram, 0)
             self.dr = self.address_stack
             self.address_stack = 0
 
         # MOI
-        elif opcode == 0b1001:
+        elif opcode == 0b1011:
             if arg < 8:
                 self.ar = int8(arg)
             else: self.xr = int8(arg - 8)
 
         # CMP
-        elif opcode == 0b1010:
+        elif opcode == 0b1100:
             pass
 
         # JO
-        elif opcode == 0b1011 and self.ar.overflow:
+        elif opcode == 0b1101 and self.ar.overflow:
             self.fetch(ram, 0)
             self.fetch(ram, 0)
             self.dr = self.address_stack
@@ -122,21 +122,11 @@ class CPU:
             elif arg == 0:
                 pass
 
+file = open('a.out', 'r')
+data = [int(x) for x in file.read().split(' ') if x != '']
+
 ram = RAM(2**10)
-ram.write(0, 0b1001_1011)
-ram.write(1, 0b0011_1000)
-ram.write(2, 0)
-ram.write(3, 100)
-ram.write(4, 0b0010_0000)
-ram.write(5, 0)
-ram.write(6, 3)
-ram.write(7, 0b0100_0000)
-ram.write(8, 0b0011_0000)
-ram.write(9, 0)
-ram.write(10, 3)
-ram.write(11, 0b0111_0000)
-ram.write(12, 0)
-ram.write(13, 1)
+ram.load(data)
 
 cpu = CPU()
 gpu = GPU((100, 200))
@@ -145,14 +135,19 @@ gpu = GPU((100, 200))
 
 
 while True:
-    cpu.fetch(ram)
-    cpu.execute(ram)
-    #print('AR: ',cpu.ar)
-    #print('XR: ',cpu.xr)
-    #print('IR: ',cpu.ir)
-    #print('DR: ',cpu.dr)
-    #print()
-    #print(ram.content[:200])
-    os.system('cls')
-    gpu.render_frame(ram)
-    time.sleep(0.2)
+    try:
+        cpu.fetch(ram)
+        cpu.execute(ram)
+        print('AR: ',cpu.ar)
+        print('XR: ',cpu.xr)
+        print('IR: ',cpu.ir)
+        print('DR: ',cpu.dr)
+        print()
+        print(ram.content[:200])
+        os.system('cls')
+        gpu.render_frame(ram)
+        time.sleep(0.1)
+    except:
+        break
+
+input()
