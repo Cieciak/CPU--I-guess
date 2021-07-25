@@ -1,4 +1,5 @@
-file = open('test.asm', 'r')
+import sys
+file = open(sys.argv[1], 'r')
 text = [x.strip() for x in file.read().splitlines() if x != '']
 label = [x.strip() for x in text if x.strip().endswith(':')]
 file.close()
@@ -128,7 +129,7 @@ for l in lines:
     elif l.opcode == 'test':
         machine_code_output.append(0b1100_0000)
 
-    elif l.opcode == 'jz':
+    elif l.opcode == 'jo':
         machine_code_output.append(0b1101_0000)
         machine_code_output.append(l.args[0] // 256)
         machine_code_output.append(l.args[0] % 256)

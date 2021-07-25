@@ -64,7 +64,7 @@ class CPU:
 
         # SUB
         elif opcode == 0b0101:
-            self.ar += self.xr
+            self.ar -= self.xr
 
         # NOR
         elif opcode == 0b0110:
@@ -76,7 +76,6 @@ class CPU:
                 self.stack.append(self.ar)
             elif arg == 0b1000:
                 self.stack.append(self.xr)
-
         # POP
         elif opcode == 0b1000:
             if arg == 0b0000:
@@ -136,21 +135,20 @@ gpu = GPU((900, 1000))
 
 while True:
     try:
-        try:
-            ram.write(1001, ram.read(1001))
-        except KeyboardInterrupt:
-            ram.write(1001, 1)
         cpu.fetch(ram)
         cpu.execute(ram)
+        os.system('cls')
         print('AR: ',cpu.ar)
         print('XR: ',cpu.xr)
         print('IR: ',cpu.ir)
         print('DR: ',cpu.dr)
         print('ZF: ',cpu.ar.zero)
+        print('OF: ',cpu.ar.overflow)
         print()
-        print(ram.content[999:1002])
-        #os.system('cls')
+        print(ram.content[900:1000])
         gpu.render_frame(ram)
+        gpu.save_frame(ram)
+        time.sleep(0.5)
     except:
         break
 
