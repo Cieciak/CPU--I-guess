@@ -104,9 +104,9 @@ class CPU:
                 self.ar = int8(arg)
             else: self.xr = int8(arg - 8)
 
-        # CMP
+        # TEST
         elif opcode == 0b1100:
-            pass
+            self.ar = int8(self.ar.int)
 
         # JO
         elif opcode == 0b1101 and self.ar.overflow:
@@ -129,24 +129,28 @@ ram = RAM(2**10)
 ram.load(data)
 
 cpu = CPU()
-gpu = GPU((100, 200))
+gpu = GPU((900, 1000))
 
 
 
 
 while True:
     try:
+        try:
+            ram.write(1001, ram.read(1001))
+        except KeyboardInterrupt:
+            ram.write(1001, 1)
         cpu.fetch(ram)
         cpu.execute(ram)
         print('AR: ',cpu.ar)
         print('XR: ',cpu.xr)
         print('IR: ',cpu.ir)
         print('DR: ',cpu.dr)
+        print('ZF: ',cpu.ar.zero)
         print()
-        print(ram.content[:200])
-        os.system('cls')
+        print(ram.content[999:1002])
+        #os.system('cls')
         gpu.render_frame(ram)
-        time.sleep(0.1)
     except:
         break
 

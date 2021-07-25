@@ -6,7 +6,9 @@ file.close()
 index = 0
 labels = {}
 for i in text:
-    if i.endswith(':'): labels[label.pop(0)] = index
+    if i.endswith(':'): 
+        labels[label.pop(0)] = index
+        index -= 1
     if i.startswith(tuple(['ldf', 'ldt', 'jmp', 'jz', 'jo'])): index += 2
 
     index += 1
@@ -123,8 +125,11 @@ for l in lines:
         elif l.args[0] == 'x':
             machine_code_output.append(0b1011_1000 + l.args[1])
 
-    elif l.opcode == 'jz':
+    elif l.opcode == 'test':
         machine_code_output.append(0b1100_0000)
+
+    elif l.opcode == 'jz':
+        machine_code_output.append(0b1101_0000)
         machine_code_output.append(l.args[0] // 256)
         machine_code_output.append(l.args[0] % 256)
 
