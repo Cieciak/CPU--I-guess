@@ -1,8 +1,10 @@
 from ram import RAM
 from basics import int8
 from gpu import GPU
+from keyboard import Keyboard
 import time
 import os
+import threading
 
 class CPU:
 
@@ -14,6 +16,7 @@ class CPU:
 
         self.stack = []
         self.address_stack = 0
+        self.halted = False
 
     def fetch(self, ram: RAM, place = 'ir'):
         if place == 'ir':
@@ -27,9 +30,9 @@ class CPU:
 
         # MOV
         if opcode == 0b0001:
-            if arg == 0b0000:
+            if arg == 0b1000:
                 self.xr = self.ar
-            elif arg == 0b1000:
+            elif arg == 0b0000:
                 self.ar = self.xr
 
         # LDF  
@@ -105,7 +108,10 @@ class CPU:
 
         # TEST
         elif opcode == 0b1100:
-            self.ar = int8(self.ar.int)
+            if self.ar == 0:
+                self.ar.zero = True
+            else:
+                self.ar.zero = False
 
         # JO
         elif opcode == 0b1101 and self.ar.overflow:
@@ -115,7 +121,9 @@ class CPU:
             self.address_stack = 0
 
         elif opcode == 0b1111:
+            # HLT
             if arg == 0b1111:
+                self.halted = True
                 print('CPU halted')
                 quit()
             elif arg == 0:
@@ -129,26 +137,29 @@ ram.load(data)
 
 cpu = CPU()
 gpu = GPU((256, 356))
+key = Keyboard(255, ram)
 
-
-
-
-while True:
-    try:
+def gpu_loop():
+    while True:
+        gpu.render_frame(ram)
+        time.sleep(0.01)
+        if cpu.halted:
+            gpu.render_frame(ram)
+            break
+        os.system('cls')
+        
+def cpu_loop():
+    while True:
         cpu.fetch(ram)
         cpu.execute(ram)
-        os.system('cls')
-        #print('AR: ',cpu.ar)
-        #print('XR: ',cpu.xr)
-        #print('IR: ',cpu.ir)
-        #print('DR: ',cpu.dr)
-        #print('ZF: ',cpu.ar.zero)
-        #print('OF: ',cpu.ar.overflow)
-        #print()
-        #print(ram.content[256:356])
-        gpu.render_frame(ram)
-        #gpu.save_frame(ram)
-    except:
-        break
+
+
+gpu_thread = threading.Thread(target=gpu_loop)
+gpu_thread.daemon = True
+gpu_thread.start()
+
+cpu_thread = threading.Thread(target=cpu_loop)
+cpu_thread.daemon = True
+cpu_thread.start()
 
 input()

@@ -116,3 +116,4 @@ dmypy.json
 *.png
 a.out
 *.gif
+*.bat

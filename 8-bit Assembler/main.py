@@ -6,13 +6,15 @@ file.close()
 
 index = 0
 labels = {}
-for i in text:
-    if i.endswith(':'): 
-        labels[label.pop(0)] = index
-        index -= 1
-    if i.startswith(tuple(['ldf', 'ldt', 'jmp', 'jz', 'jo'])): index += 2
 
-    index += 1
+for i in text:
+    print(index, i)
+    if i.endswith(':'):
+        labels[label.pop(0)] = index
+    elif i.startswith(tuple(['ldf', 'ldt', 'jmp', 'jz', 'jo'])):
+        index += 3
+    else: index += 1
+
 
 print(labels)
 
@@ -55,7 +57,7 @@ class Line:
         self.opcode, *arg = text.split(' ', 1)
         self.args = parse_arg(arg[0], labels) if arg else None
 
-        print(self.opcode, self.args)
+        #print(self.opcode, self.args)
 
 
 lines = [Line(x) for x in text]
@@ -66,7 +68,7 @@ for l in lines:
     if l.opcode == 'mov':
         if l.args[0] == 'a':
             machine_code_output.append(0b0001_0000)
-        elif l.args[1] == 'x':
+        elif l.args[0] == 'x':
             machine_code_output.append(0b0001_1000)
     
     elif l.opcode == 'ldf':
@@ -144,5 +146,4 @@ file = open('a.out', 'w')
 for i in machine_code_output:
     file.write(str(i) + ' ')
 
-print(machine_code_output)
 file.close()
