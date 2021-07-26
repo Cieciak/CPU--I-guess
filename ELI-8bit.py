@@ -128,7 +128,7 @@ ram = RAM(2**10)
 ram.load(data)
 
 cpu = CPU()
-gpu = GPU((900, 1000))
+gpu = GPU((256, 356))
 
 
 
@@ -138,17 +138,16 @@ while True:
         cpu.fetch(ram)
         cpu.execute(ram)
         os.system('cls')
-        print('AR: ',cpu.ar)
-        print('XR: ',cpu.xr)
-        print('IR: ',cpu.ir)
-        print('DR: ',cpu.dr)
-        print('ZF: ',cpu.ar.zero)
-        print('OF: ',cpu.ar.overflow)
-        print()
-        print(ram.content[900:1000])
+        #print('AR: ',cpu.ar)
+        #print('XR: ',cpu.xr)
+        #print('IR: ',cpu.ir)
+        #print('DR: ',cpu.dr)
+        #print('ZF: ',cpu.ar.zero)
+        #print('OF: ',cpu.ar.overflow)
+        #print()
+        #print(ram.content[256:356])
         gpu.render_frame(ram)
-        gpu.save_frame(ram)
-        time.sleep(0.5)
+        #gpu.save_frame(ram)
     except:
         break
 
