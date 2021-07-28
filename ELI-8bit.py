@@ -5,6 +5,7 @@ from keyboard import Keyboard
 import time
 import os
 import threading
+import time
 
 class CPU:
 
@@ -149,9 +150,16 @@ def gpu_loop():
         os.system('cls')
         
 def cpu_loop():
+    start = time.time()
+    counter = 0
     while True:
+        counter += 1
         cpu.fetch(ram)
         cpu.execute(ram)
+        if (time.time() - start) > 2:
+            start = time.time()
+            os.system(f'title {int(counter / 2)} cycles per second')
+            counter = 0
 
 
 gpu_thread = threading.Thread(target=gpu_loop)
