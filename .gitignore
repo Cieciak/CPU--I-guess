@@ -112,7 +112,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-.vscode/settings.json
+.vscode/
 *.png
 a.out
 *.gif
