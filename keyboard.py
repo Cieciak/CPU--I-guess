@@ -10,6 +10,7 @@ class Keyboard:
         self.listener.start()
 
     def on_press(self, key):
+        value = key.vk
         try:
             value = int(key.char) # Numeric input
         except ValueError:

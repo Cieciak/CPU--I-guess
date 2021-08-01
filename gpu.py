@@ -11,7 +11,9 @@ class GPU:
 
     def render_frame(self, ram: ram.RAM):
         vram = ram.content[self.vram_address[0]:self.vram_address[1]]
-        shade = [' ', '░', '▒', '▓', '█']
+        #        0         10        20        30        40        50        60        70        80        90
+        shade = ' ░▒▓█                                                            abcdefghijklmnopqrstuvwxyz'
+                # ######### ######### ######### ######### ######### ######### ######### ######### #########
         for index, i in enumerate(vram):
             if index % 10 == 0:
                 print()

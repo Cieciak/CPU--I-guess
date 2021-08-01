@@ -133,7 +133,7 @@ class CPU:
 file = open('a.out', 'r')
 data = [int(x) for x in file.read().split(' ') if x != '']
 
-ram = RAM(2**10)
+ram = RAM(2**16)
 ram.load(data)
 
 cpu = CPU()
@@ -145,6 +145,7 @@ def gpu_loop():
         gpu.render_frame(ram)
         time.sleep(0.01)
         if cpu.halted:
+            print(cpu.ar)
             gpu.render_frame(ram)
             break
         os.system('cls')
@@ -170,4 +171,6 @@ cpu_thread = threading.Thread(target=cpu_loop)
 cpu_thread.daemon = True
 cpu_thread.start()
 
+input()
+print(ram.content[:30])
 input()
