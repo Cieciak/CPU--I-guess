@@ -1,29 +1,31 @@
-import numpy
-import numpy as np
 import ram
-from PIL import Image
 
 class GPU:
 
-    def __init__(self, ram_space):
-        self.vram_address = ram_space
-        self.frames = 0
+    def __init__(self, address: int, size: int, memory: ram.RAM):
+        self.address = address
+        self.size = size
+        self.ram = memory
+        self.CHARACTER_SET = ' ░▒▓█                                                            abcdefghijklmnopqrstuvwxyz'
 
-    def render_frame(self, ram: ram.RAM):
-        vram = ram.content[self.vram_address[0]:self.vram_address[1]]
-        #        0         10        20        30        40        50        60        70        80        90
-        shade = ' ░▒▓█                                                            abcdefghijklmnopqrstuvwxyz'
-                # ######### ######### ######### ######### ######### ######### ######### ######### #########
+    def render_frame(self):
+        vram = self.ram.content[self.address:self.address + 100]
         for index, i in enumerate(vram):
-            if index % 10 == 0:
-                print()
-            print(shade[i], end='')
-
+            if not index % 10: print()
+            print(self.CHARACTER_SET[i], end='')
         print()
 
-    def save_frame(self, ram: ram.RAM):
-        vram = ram.content[self.vram_address[0]:self.vram_address[1]]
-        a = np.array(vram).reshape((10, 10)) * 60
-        image = Image.fromarray(np.uint8(a), 'L')
-        image.save(f'Frames/{self.frames}.png')
-        self.frames += 1
+
+if __name__ == '__main__':
+    from time import sleep
+    import keyboard, os
+
+    memory = ram.RAM(1024)
+
+    key = keyboard.Keyboard(10, memory)
+    gpu = GPU(10, 10, memory)
+
+    while True:
+        gpu.render_frame()
+        sleep(0.1)
+        os.system('cls')
