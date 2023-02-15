@@ -1,44 +1,30 @@
+from utils import uint8
+
 class RAM:
 
-    def __init__(self, size: int):
-        '''RAM Instance'''
+    def __init__(self, size: int) -> None:
         self.size = size
-        self.content = [0] * size
+        self.data = [uint8(0) for n in range(size)]
 
     def __repr__(self) -> str:
-        out = ''
-        for i in self.content:
-            out += f' {i}'
-        return out
+        return f'{self.data}'
 
-    def read(self, address: int) -> int:
-        return self.content[address]
+    def read(self, index: int) -> uint8:
+        return self.data[index]
 
-    def write(self, address: int, value: int) -> int:
-        self.content[address] = value
+    def write(self, index: int, value: uint8):
+        self.data[index] = value
 
-    def load(self, data: list[int]):
-        for  index, i in enumerate(data):
-            self.content[index] = i
+    def load(self, data: list[uint8]):
+        for index, value in enumerate(data):
+            self.write(index, value)
 
-    def loads(self, data: str):
-        i = 0
-        for word in data.split(' '):
-            if word.isdigit():
-                self.content[i] = int(word)
-                i += 1
-            elif word.startswith('0x'):
-                self.content[i] = int(word, 0)
-                i += 1
-            elif word.startswith('0b'):
-                self.content[i] = int(word, 0)
-                i +- 1
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     ram = RAM(1024)
 
-    ram.load([1,2,3,5,6,9,9,9,6,5,4,8])
 
-    ram.write(1, 23)
+    data = [123,65,63,66,34,85,964,57,45]
+
+    ram.load([uint8(x) for x in data])
 
     print(ram)

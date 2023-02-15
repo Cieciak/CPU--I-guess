@@ -1,130 +1,133 @@
-import ram, time
-import Utils.basics as basics
+from utils import uint8
+import ram
 
 class CPU:
 
-    def __init__(self, ram: ram.RAM):
-        # GP registers
-        self.ar = basics.int8(0)
-        self.xr = basics.int8(0)
+    def __init__(self) -> None:
+        self.AX = uint8(0)
+        self.BX = uint8(0)
+        self.CX = uint8(0)
+        self.DX = uint8(0)
 
-        self.ir = basics.int8(0)
-        self.dr = 0
+        self.OV = 0
 
-        self.stack = []
-        self.ram = ram
+        self.ports = [0,0,0,0]
 
-        self.address_stack = 0
-        self.halted = False
+        # Address of next instruction
+        self.PC = int(0)
+        # Current instruction
+        self.IR = uint8(0)
+        # Address register
+        self.AD = int(0)
+        # Stack pointer
+        self.SP = int(0)
 
-    def fetch(self, place = 'ir'):
-        if place == "ir":
-            self.ir = basics.int8(self.ram.read(self.dr))
+        self.halt = False
+        self.ram = ram.RAM(2 ** 16)
+        self.reg_table = {
+            0: self.AX,
+            1: self.BX,
+            2: self.CX,
+            3: self.DX,
+        }
+
+    def __repr__(self):
+        return f'AX {self.AX}\nBX {self.BX}\nCX {self.CX}\nDX {self.DX}\n OV {self.OV}'
+
+    def fetch(self, dest = 'IR'):
+        if dest == 'IR':
+                self.IR = self.ram.read(self.PC)
         else:
-            # Put int8 to addres stack
-            self.address_stack = self.address_stack * 256 + self.ram.read(self.dr)
-        self.dr += 1
+            self.AD = self.AD * 256 + self.ram.read(self.PC).value
+        self.PC += 1
 
     def execute(self):
-        opcode, args = self.ir.split()
+        opcode, args = self.IR.split()
 
         # MOV
-        if opcode == 0b0001:
-            if args == 0b1000:
-                self.xr = self.ar
-            elif args == 0b0000:
-                self.ar = self.xr
-        # LDF
+        if   opcode == 0b0001:
+            DR, SR = args // 4, args % 4
+            self.reg_table[DR].set(self.reg_table[SR])
+        # LD
         elif opcode == 0b0010:
-            if args == 0b0000:
-                self.fetch(0)
-                self.fetch(0)
-                self.ar = basics.int8(self.ram.read(self.address_stack))
-            elif args == 0b1000:
-                self.fetch(0)
-                self.fetch(0)
-                self.xr = basics.int8(self.ram.read(self.address_stack))
-            self.address_stack = 0
-        # LDT
+            self.fetch('AD')
+            self.fetch('AD')
+            DR = args // 4
+            self.reg_table[DR].set(self.ram.read(self.AD))
+            self.AD = 0
+        # ST
         elif opcode == 0b0011:
-            if args == 0b0000:
-                self.fetch(0)
-                self.fetch( 0)
-                self.ram.write(self.address_stack, int(self.ar))
-            elif args == 0b1000:
-                self.fetch(0)
-                self.fetch(0)
-                self.ram.write(self.address_stack, int(self.xr))
-            self.address_stack = 0
-        # ADD
+            self.fetch('AD')
+            self.fetch('AD')
+            SR = args // 4
+            self.ram.write(self.AD, self.reg_table[SR])
+            self.AD = 0
+        # NOT
         elif opcode == 0b0100:
-            self.ar += self.xr
-        # SUB
+            SR = args // 4
+            self.reg_table[SR].set(~self.reg_table[SR])
+        # ADD
         elif opcode == 0b0101:
-            self.ar -= self.xr
-        # NOR
-        elif opcode == 0b0110:
-            self.ar |= self.xr 
-        # PUSH
-        elif opcode == 0b0111:
-            if args == 0b0000:
-                self.stack.append(self.ar)
-            elif args == 0b1000:
-                self.stack.append(self.xr)
-        # POP
-        elif opcode == 0b1000:
-            if args == 0b0000:
-                self.ar = self.stack.pop()
-            elif args == 0b1000:
-                self.xr = self.stack.pop()
+            DR, SR = args // 4, args % 4
+            self.reg_table[DR].set(self.reg_table[DR] + self.reg_table[SR])
+            self.OV = int(self.reg_table[DR].overflow)
         # JMP
-        elif opcode == 0b1001:
-            self.fetch(0)
-            self.fetch(0)
-            self.dr = self.address_stack
-            self.address_stack = 0
-        # JZ
-        elif opcode == 0b1010 and self.ar.zero:
-            self.fetch(0)
-            self.fetch(0)
-            self.dr = self.address_stack
-            self.address_stack = 0
-        # MOI
-        elif opcode == 0b1011:
-            if args < 8:
-                self.ar = basics.int8(args)
-            else: self.xr = basics.int8(args - 8)
-        # TEST
-        elif opcode == 0b1100:
-            if self.ar == 0:
-                self.ar.zero = True
-            else:
-                self.ar.zero = False
+        elif opcode == 0b0110:
+            self.fetch('AD')
+            self.fetch('AD')
+            self.PC = self.AD
+            self.AD = 0
         # JO
-        elif opcode == 0b1101 and self.ar.overflow:
-            self.fetch(ram, 0)
-            self.fetch(ram, 0)
-            self.dr = self.address_stack
-            self.address_stack = 0
+        elif opcode == 0b0111:
+            self.fetch('AD')
+            self.fetch('AD')
+            if self.OV:
+                self.PC = self.AD
+            self.AD = 0
+        # OUT
+        elif opcode == 0b1000:
+            DP, SR = args // 4, args % 4
+            self.ports[DP] = self.reg_table[SR]
+        # IN
+        elif opcode == 0b1001:
+            DR, SP = args // 4, args % 4
+            self.reg_table[DR].set(self.ports[SP])
+        # MOI
+        elif opcode == 0b1010:
+            DR, IM = args // 4, args % 4
+            self.reg_table[DR].set(uint8(IM))
+        # PUSH
+        elif opcode == 0b1011:
+            SR = args // 4
+            self.SP += 1
+            self.ram.write(self.SP, self.reg_table[SR])
+        # POP
+        elif opcode == 0b1100:
+            DR = args // 4
+            self.reg_table[DR].set(self.ram.read(self.SP))
+            self.SP -= 1
+        # SET
+        elif opcode == 0b1101:
+            self.fetch('AD')
+            self.fetch('AD')
+            if args == 1: self.SP = self.AD
+            self.AD = 0
 
+        # HLT
         elif opcode == 0b1111:
-            # HLT
-            if args == 0b1111:
-                self.halted = True
-                print('CPU halted')
-                quit()
-            elif args == 0:
-                pass  
+            self.halt = True
 
 if __name__ == '__main__':
-    memory = ram.RAM(1024)
+    cpu = CPU()
 
-    memory.load([0, 0b1011_1111, 0b0011_1000, 0,0])
-    cpu = CPU(memory)
+    data = [209, 1, 0, 161, 176, 176, 196, 240]
+    cpu.ram.load([uint8(x) for x in data])
 
-    while True:
-        time.sleep(1)
+    cpu.ram.write(0x20, uint8(0x5A))
+
+    while not cpu.halt:
         cpu.fetch()
         cpu.execute()
-        print(cpu.ar, cpu.xr)
-        print(memory)
+        print(cpu, '\n')
+
+    print(cpu.ram.data[0xF0:0x110])
